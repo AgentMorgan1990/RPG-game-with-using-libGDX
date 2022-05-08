@@ -10,14 +10,14 @@ public class Monster extends GameCharacter {
 
     private float activityRadius;
     private float moveTimer;
-    private Vector2 direction;
-    private Vector2 temp;
-
 
     public Monster(GameScreen game) {
         this.texture = new Texture("Monster.png");
         this.textureHp = new Texture("bar.png");
-        this.position = new Vector2(600, 600);
+        this.position = new Vector2(MathUtils.random(0, 1280), MathUtils.random(0, 720));
+        while (!game.getMap().isCellPassable(position)) {
+            this.position.set(MathUtils.random(0, 1280), MathUtils.random(0, 720));
+        }
         this.direction = new Vector2(0, 0);
         this.temp = new Vector2(0, 0);
         this.speed = 100.0f;
@@ -38,11 +38,9 @@ public class Monster extends GameCharacter {
         if (dst < activityRadius) {
             /*вычитаем один вектор из другого - получаем направление к герою,
             если вычитать наоборот направление будет от героя*/
-            temp.set(game.getHero().getPosition()).sub(position).nor();
-            position.mulAdd(temp, speed * dt);
+            direction.set(game.getHero().getPosition()).sub(this.position).nor();
         } else {
-            //Движение по вектору
-            position.mulAdd(direction, speed * dt);
+
             moveTimer -= dt;
             if (moveTimer < 0.0f) {
                 //обновление таймера
@@ -52,6 +50,10 @@ public class Monster extends GameCharacter {
                 //Нормировка векторов, чтобы вектора привести к единице
                 direction.nor();
             }
+        }
+        temp.set(position).mulAdd(direction, speed * dt);
+        if (game.getMap().isCellPassable(temp)) {
+            position.set(temp);
         }
         if (dst < weapon.getAttackRadius()) {
             attackTimer += dt;
