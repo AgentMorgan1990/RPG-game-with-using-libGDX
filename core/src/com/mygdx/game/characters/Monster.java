@@ -1,11 +1,15 @@
 package com.mygdx.game.characters;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.GameScreen;
-import com.mygdx.game.Weapon;
+import com.mygdx.game.weapon.Weapon;
 
+/*
+ * Класс описание монстров
+ */
 public class Monster extends GameCharacter {
 
     private float activityRadius;
@@ -13,24 +17,26 @@ public class Monster extends GameCharacter {
 
     public Monster(GameScreen game) {
         this.texture = new Texture("Monster.png");
+        this.regions = new TextureRegion(texture).split(80, 80)[0];
         this.textureHp = new Texture("bar.png");
         this.position = new Vector2(MathUtils.random(0, 1280), MathUtils.random(0, 720));
         while (!game.getMap().isCellPassable(position)) {
             this.position.set(MathUtils.random(0, 1280), MathUtils.random(0, 720));
         }
         this.direction = new Vector2(0, 0);
-        this.temp = new Vector2(0, 0);
         this.speed = 100.0f;
         this.activityRadius = 300.0f;
         this.maxHp = 40.0f;
         this.hp = this.maxHp;
         this.game = game;
         this.weapon = new Weapon("Sword", 100.0f, 0.8f, 10);
+        this.secondsPerFrame = 0.4f;
     }
 
     @Override
     public void update(float dt) {
         damageEffectTimer -= dt;
+        animationTimer += dt;
         if (damageEffectTimer < 0.0f) {
             damageEffectTimer = 0.0f;
         }
@@ -51,10 +57,8 @@ public class Monster extends GameCharacter {
                 direction.nor();
             }
         }
-        temp.set(position).mulAdd(direction, speed * dt);
-        if (game.getMap().isCellPassable(temp)) {
-            position.set(temp);
-        }
+        moveForward(dt);
+
         if (dst < weapon.getAttackRadius()) {
             attackTimer += dt;
             if (attackTimer >= weapon.getAttackPeriod()) {
